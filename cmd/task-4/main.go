@@ -16,9 +16,9 @@ func main() {
 	// each request matching a path will be serve by the corresponding function
 	// the matching is longest path first
 	// more info https://pkg.go.dev/net/http
-	http.HandleFunc("/", helloServer)
+	http.HandleFunc("/", measureTime(betterLogs(helloServer)))
 	// the {user} element of the path is captured and available in the handler
-	http.HandleFunc("/user/{user}/", helloUser)
+	http.HandleFunc("/user/{user}/", measureTime(betterLogs(helloUser)))
 
 	// start the webserver
 	slog.Info("server running", "address", serverAddress)

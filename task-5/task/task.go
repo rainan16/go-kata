@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sync"
 	"time"
 )
 
@@ -24,6 +25,11 @@ type Task struct {
 
 // Here is a handler that uses some goroutines
 func HandleTask(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
 	var (
 		task   Task
 		result string
@@ -32,28 +38,34 @@ func HandleTask(w http.ResponseWriter, r *http.Request) {
 	// read all the body
 	buff, err := io.ReadAll(r.Body)
 	if err != nil {
-		fmt.Fprintf(w, "ERROR reading body: %+v", err)
+		http.Error(w, fmt.Sprintf("Error reading body: %v", err), http.StatusBadRequest)
+		return
 	}
 	r.Body.Close()
 
 	// ummarshal the body in a variable
 	err = json.Unmarshal(buff, &task)
 	if err != nil {
-		fmt.Fprintf(w, "ERROR umarshaling JSON %+v", err)
+		http.Error(w, fmt.Sprintf("Error unmarshaling JSON: %v", err), http.StatusBadRequest)
+		return
 	}
 
-	done := make(chan bool)
+	if task.Parallel < 1 {
+		task.Parallel = 1
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(task.Parallel)
 	// based on how parallel we need to be we run a goroutine
-	for i := range task.Parallel {
+	for i := 0; i < task.Parallel; i++ {
+		i := i
 		go func() { // func literals are closures
+			defer wg.Done()
 			fmt.Printf("executing task %q goroutine: %d\n", task.Name, i)
-			done <- true
 		}()
 	}
 	// now wait for all the goroutines we started to finish
-	for range task.Parallel {
-		<-done
-	}
-	result = fmt.Sprintf("task %q execute in %d parallel goroutines\nelapsed time %v\n", task.Name, task.Parallel, time.Now().Sub(start))
+	wg.Wait()
+	result = fmt.Sprintf("task %q execute in %d parallel goroutines\nelapsed time %v\n", task.Name, task.Parallel, time.Since(start))
 	fmt.Fprintf(w, "result: %s", result)
 }

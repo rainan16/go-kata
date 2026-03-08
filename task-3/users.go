@@ -14,19 +14,22 @@ type User struct {
 	// we need to have a billing and a shipping address, here is the Billing one
 	// you need to add another one
 	Billing address.Address
+	Shipping address.Address
 
 	// 💡and a Login method would not go amiss, there should be an interface we
 	// can embed... or implement
+	Loginer Loginer
 }
 
 // New returns a new User. Go has not special functions (constructors) to
 // create new values, we just use functions. The name of the function usually
 // contains the New word.
-func New(name, email string, billig address.Address) (User, error) {
+func New(name, email string, billig address.Address, shipping address.Address) (User, error) {
 	newUser := User{
 		Name:    name,
 		Email:   email,
 		Billing: billig,
+		Shipping: shipping,
 	}
 	return newUser, nil
 }

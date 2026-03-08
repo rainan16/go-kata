@@ -5,7 +5,10 @@
 
 package address
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // Address is user defined struct, in Go there are no classes but any user
 // defined type can have methods
@@ -27,7 +30,19 @@ func (addr Address) Validate() error {
 	if err != nil {
 		return fmt.Errorf("invalid country %q: %w", addr.Country, err)
 	}
-	// err = isValidZipCode()
+	if strings.TrimSpace(addr.City) == "" {
+		return fmt.Errorf("invalid city %q: empty city", addr.City)
+	}
+	if strings.TrimSpace(addr.Street) == "" {
+		return fmt.Errorf("invalid street %q: empty street", addr.Street)
+	}
+	if strings.TrimSpace(addr.Name) == "" {
+		return fmt.Errorf("invalid name %q: empty name", addr.Name)
+	}
+	err = isValidZipCode(addr.City, addr.ZipCode)
+	if err != nil {
+		return fmt.Errorf("invalid zip code %q: %w", addr.ZipCode, err)
+	}
 
 	return nil
 }
@@ -38,8 +53,15 @@ func isValidCountry(country string) error {
 	// field is to have a list of countries and check if it is present?
 	// let's have a for loop "range" over a slice of strings ([]string)
 	// maybe there is some explanation here https://go.dev/doc/effective_go#for
-
-	return nil
+	if strings.TrimSpace(country) == "" {
+		return fmt.Errorf("empty country")
+	}
+	for _, c := range countryList {
+		if strings.EqualFold(c, country) {
+			return nil
+		}
+	}
+	return fmt.Errorf("unknown country")
 }
 
 // countryList is a list of some country for this Kata also not exported
@@ -59,12 +81,30 @@ var countryList = []string{
 func isValidZipCode(city, zipcode string) error {
 	// in this case a map (dictionary) can be very useful to see all the
 	// possible zipcodes in a city
-	return nil
+	if strings.TrimSpace(city) == "" {
+		return fmt.Errorf("empty city")
+	}
+	if strings.TrimSpace(zipcode) == "" {
+		return fmt.Errorf("empty zipcode")
+	}
+	for k, list := range cityZipcode {
+		if !strings.EqualFold(k, city) {
+			continue
+		}
+		for _, code := range list {
+			if code == zipcode {
+				return nil
+			}
+		}
+		return fmt.Errorf("invalid zipcode for city")
+	}
+	return fmt.Errorf("unknown city")
 }
 
 var cityZipcode = map[string][]string{
-	"Austria": {"123", "456"},
-	"Italy":   {"123", "456"},
+	"Salzburg": {"5020", "5023"},
+	"Vienna":   {"1010", "1020"},
+	"Milan":    {"20121", "20122"},
 }
 
 // 💡 all these variable are hardcoded, would it be better to load the validation
