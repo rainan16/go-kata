@@ -1,4 +1,5 @@
 # Go Bootstrap Kata
+[![Go CI](https://github.com/rainan16/go-kata/actions/workflows/go.yml/badge.svg)](https://github.com/rainan16/go-kata/actions/workflows/go.yml)
 
 This is kata to get you a taste of Go with some hands on tasks.
 
@@ -206,6 +207,5 @@ Run `go tool dist list` to see them all.
 ## Task 7 - Beer
 
 💡It's Beer o'clock!
-
 
 
